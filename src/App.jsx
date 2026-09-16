@@ -1,93 +1,66 @@
-import { useState } from 'react'
 import './App.css'
+import useWeather from './hooks/useWeather'
+import SearchBar from './components/SearchBar'
+import RecentSearches from './components/RecentSearches'
+import WeatherCard from './components/WeatherCard'
+import ForecastList from './components/ForecastList'
 
 function App() {
-  const [city, setCity] = useState('')
-  const [weather, setWeather] = useState(null)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [unit, setUnit] = useState('metric') // metric = C, imperial = F
+  const {
+    city,
+    setCity,
+    weather,
+    forecast,
+    error,
+    loading,
+    unit,
+    recentSearches,
+    darkMode,
+    toggleDarkMode,
+    getWeather,
+    toggleUnit,
+    clearHistory,
+    getBackgroundClass,
+  } = useWeather()
 
-  const API_KEY = import.meta.env.VITE_WEATHER_API_KEY
-
-  const getWeather = async (searchUnit = unit) => {
-    setError('')
-    setWeather(null)
-    setLoading(true)
-
-    try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${searchUnit}&appid=${API_KEY}`
-      )
-
-      if (!response.ok) {
-        throw new Error('City fela parena')
-      }
-
-      const data = await response.json()
-      setWeather(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      getWeather()
     }
   }
 
-const toggleUnit = () => {
-  const newUnit = unit === 'metric' ? 'imperial' : 'metric'
-  setUnit(newUnit)
-  if (weather) {
-    getWeather(newUnit)
+  const handleRecentClick = (cityName) => {
+    setCity(cityName)
+    getWeather(unit, cityName)
   }
-}
 
-const handleKeyDown = (e) => {
-  if (e.key === 'Enter') {
-    getWeather()
-  }
-}
-
-  return (
+return (
+  <div className={`app-wrapper ${getBackgroundClass()} ${darkMode ? 'dark' : ''}`}>
     <div className="app">
+      <button className="theme-toggle" onClick={toggleDarkMode}>
+        {darkMode ? '☀️ Light' : '🌙 Dark'}
+      </button>
       <h1>Weather App</h1>
-      <div className="search-box">
-        <input 
-          type="text" 
-          placeholder="Enter city" 
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
+
+        <SearchBar
+          city={city}
+          setCity={setCity}
+          onSearch={() => getWeather()}
           onKeyDown={handleKeyDown}
+          loading={loading}
         />
-        <button onClick={() => getWeather()} disabled={loading}>
-          {loading ? 'Searching...' : 'Search'}
-        </button>
+
+        <RecentSearches
+          searches={recentSearches}
+          onCityClick={handleRecentClick}
+          onClear={clearHistory}
+        />
+
+        {error && <p className="error">{error}</p>}
+
+        <WeatherCard weather={weather} unit={unit} onToggleUnit={toggleUnit} />
+        <ForecastList forecast={forecast} unit={unit} />
       </div>
-
-      {weather && (
-        <button className="unit-toggle" onClick={toggleUnit}>
-          Show in {unit === 'metric' ? '°F' : '°C'}
-        </button>
-      )}
-
-      {error && <p className="error">{error}</p>}
-
-      {weather && (
-        <div className="weather-card">
-          <h2>{weather.name}</h2>
-          <img 
-            src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
-            alt={weather.weather[0].description}
-          />
-          <p className="temp">
-            {Math.round(weather.main.temp)}°{unit === 'metric' ? 'C' : 'F'}
-          </p>
-          <p className="desc">{weather.weather[0].description}</p>
-          <div className="details">
-            <span>Humidity: {weather.main.humidity}%</span>
-            <span>Wind: {weather.wind.speed} {unit === 'metric' ? 'm/s' : 'mph'}</span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
