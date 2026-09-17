@@ -1,6 +1,6 @@
 # Weather App
 
-A weather app built with React and the OpenWeatherMap API. Search any city to see real-time conditions, a 5-day forecast, and hourly details — with dark mode, recent searches, and auto-detected location.
+A weather app built with React and the OpenWeatherMap API. Search any city to see real-time conditions, a 5-day forecast, and hourly details with dark mode, recent searches, and auto-detected location.
 
 ## Features
 
